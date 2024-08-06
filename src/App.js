@@ -12,78 +12,91 @@ function App() {
 
   useEffect(() => {
     let interval;
-    
+
     if (error) {
       interval = setInterval(async () => {
-        const response = await fetch('https://swapi.dev/api/films/')
+        const response = await fetch('https://swapi.dev/api/films/');
       }, 5000);
-      
     }
     if (clicked) {
       clearInterval(interval);
-      
     }
 
     return () => {
       clearInterval(interval);
-
     };
   }, [error, clicked]);
 
-  
-  
-
-  const  fetchMoviesHandler = useCallback(async () => {
+  const fetchMoviesHandler = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await fetch('https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json');
+      const response = await fetch(
+        'https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json'
+      );
       if (!response.ok) {
         throw new Error('Something went wrong....Retrying');
       }
       const data = await response.json();
 
-      console.log(data);
+      //console.log(data);
 
       const loadedMovies = [];
 
-      for (const key in data){
+      for (const key in data) {
         loadedMovies.push({
           id: key,
           title: data[key].title,
           openingText: data[key].openingText,
-          releaseDate: data[key].releaseDate
-        })
+          releaseDate: data[key].releaseDate,
+        });
       }
-      
-
       setMovies(loadedMovies);
     } catch (error) {
       setError(error.message);
     }
     setIsLoading(false);
-  }, [])
+  }, []);
 
   useEffect(() => {
     fetchMoviesHandler();
-  }, [fetchMoviesHandler])
+  }, [fetchMoviesHandler]);
 
-  async function addMovieHandler(movie){
-    // const response = await fetch('https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json', {
-    //   method: 'POST',
-    //   body: JSON.stringify(movie),
-    //   headers: {
-    //     'Content-Type': 'application/json'
-    //   }
-    // });
-    // const data = await response.json();
-    console.log(movie)
+  async function addMovieHandler(movie) {
+    const response = await fetch(
+      'https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json',
+      {
+        method: 'POST',
+        body: JSON.stringify(movie),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    const data = await response.json();
+    fetchMoviesHandler();
+  }
+
+  async function deleteMovieHandler(id) {
+    console.log(`id: ${id}`);
+    const updatedMovies = movies.filter((movie) => {
+      return movie.id != id;
+    });
+    setMovies(updatedMovies);
+
+    const response = await fetch(
+      `https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies/${id}.json`,
+      {
+        method: 'DELETE',
+      }
+    );
+    const data = await response.json();
   }
 
   let content = <p>Found no movies</p>;
 
   if (movies.length > 0) {
-    content = <MoviesList movies={movies} />;
+    content = <MoviesList movies={movies} onDeleteMovie={deleteMovieHandler} />;
   }
   if (error) {
     content = <p>{error}</p>;
@@ -97,7 +110,7 @@ function App() {
   return (
     <React.Fragment>
       <section>
-        <AddMovie onAddMovie={addMovieHandler}/>
+        <AddMovie onAddMovie={addMovieHandler} />
       </section>
       <section>
         <button onClick={fetchMoviesHandler}>Fetch Movies</button>
