@@ -15,7 +15,7 @@ function App() {
 
     if (error) {
       interval = setInterval(async () => {
-        const response = await fetch('https://swapi.dev/api/films/');
+        const response = await fetch('https://react-backend-app-f330f-default-rtdb.asia-southeast1.firebasedatabase.app/movies.json');
       }, 5000);
     }
     if (clicked) {
